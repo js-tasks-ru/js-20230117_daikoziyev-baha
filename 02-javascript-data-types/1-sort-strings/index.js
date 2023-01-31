@@ -6,26 +6,15 @@
  */
 export function sortStrings(arr, param = 'asc') {
   const sortedArr = [...arr];
+  const directions = {
+    'asc': 1,
+    'desc': -1
+  };
+  const direction = directions[param];
+
   const collator = new Intl.Collator(['ru-en', 'ru', 'en'], { caseFirst: 'upper' });
   return sortedArr.sort((a, b) => {
-    const sortAnswer = collator.compare(a, b);
-    if (sortAnswer > 0) {
-      if (param === 'asc') {
-        return 1;
-      }
-      if (param === 'desc') {
-        return -1;
-      }
-    }
-    if (sortAnswer < 0) {
-      if (param === 'asc') {
-        return -1;
-      }
-      if (param === 'desc') {
-        return 1;
-      }
-    }
-    return 0;
+    return direction * collator.compare(a, b);
   });
 }
 
