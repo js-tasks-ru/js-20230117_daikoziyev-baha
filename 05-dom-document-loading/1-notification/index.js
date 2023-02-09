@@ -1,5 +1,5 @@
 export default class NotificationMessage {
-  static currentElem = '';
+  static currentElem;
   constructor(targetElem = '', {duration = 2000, type = 'success'}) {
     this.targetElem = targetElem;
     this.duration = duration;
@@ -7,12 +7,9 @@ export default class NotificationMessage {
     this.render();
   }
   getHeader() {
-    if (this.type) {
-      return `
-                 <div class="notification-header">${this.type}</div>
-            `;
-    }
-    return '';
+      return this.type
+          ? `<div class="notification-header">${this.type}</div>`
+          : '';
   }
 
   getBody() {
@@ -51,7 +48,7 @@ export default class NotificationMessage {
   }
   destroy() {
     this.remove();
-    this.element = {};
+    this.element = null;
   }
 
   render() {

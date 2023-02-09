@@ -89,7 +89,6 @@ export default class SortableTable {
         const sortedData = this.sortData(field, order);
         const allColumns = this.element.querySelectorAll('.sortable-table__cell[data-id]');
         const currentColumn = this.element.querySelector(`.sortable-table__cell[data-id=${field}]`);
-        console.log(currentColumn)
         // NOTE: Remove sorting arrow from other columns
         allColumns.forEach(column => {
             column.dataset.order = '';
@@ -150,16 +149,18 @@ export default class SortableTable {
                         order: 'asc'
                     };
                 }
-            };
+            }
         });
     }
     remove() {
-        this.element.remove();
+      if (this.element) {
+          this.element.remove();
+      }
     }
     destroy() {
         this.remove();
-        this.element = {};
-        this.subElements = {};
+        this.element = null;
+        this.subElements = null;
     }
     render() {
         const wrapper = document.createElement('div');

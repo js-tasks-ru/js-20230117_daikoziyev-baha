@@ -1,8 +1,7 @@
 export default class ColumnChart {
-
     chartHeight = 50;
-
-    constructor({ data = [], label = '', link = '', value = 0, formatHeading = (value) => value }) {
+    subElements = {};
+    constructor({data = [], label = '', link = '', value = 0, formatHeading = (value) => value }) {
         this.data = data;
         this.label = label;
         this.link = link;
@@ -10,27 +9,35 @@ export default class ColumnChart {
         this.formatHeading = formatHeading;
         this.render();
     }
-
-    getColumnProps = (data) => {
+    getColumnProps(data) {
         const maxValue = Math.max(...data);
-        const scale = 50 / maxValue;
-    
+        const scale = this.chartHeight / maxValue;
+
         return data.map(item => {
             return {
                 percent: (item / maxValue * 100).toFixed(0) + '%',
                 value: String(Math.floor(item * scale))
             };
         });
-    };
+    }
 
-    update = (data) => {
+    update(data) {
+        if (!data.length) {
+            this.element.classList.add('column-chart_loading');
+        }
         this.data = data;
         const body = this.element.querySelector('.column-chart__chart');
         body.innerHTML = this.getBody();
     }
 
-    remove = () => {
-        this.element.remove();
+    remove() {
+        if (this.element) {
+            this.element.remove();
+        }
+    }
+    destroy() {
+        this.remove();
+        this.element = null;
     }
 
     getLink() {
@@ -40,22 +47,17 @@ export default class ColumnChart {
     }
 
     getBody() {
-        let columns = '';
         if (this.data.length === 0) {
-            return columns;
+            return '';
         }
-        this.getColumnProps(this.data).forEach(item => {
-            columns += `<div style="--value: ${item.value}" data-tooltip="${item.percent}"></div>`;
-        });
-        return columns;
+        return this.getColumnProps(this.data).map(item => {
+            return `<div style="--value: ${item.value}" data-tooltip="${item.percent}"></div>`;
+        }).join('');
     }
 
-    getHeader = () => {
-        return (
-            `
-                <div data-element="header" class="column-chart__header">${this.formatHeading(this.value)}</div>
-            `
-        );
+    getHeader() {
+        return `
+                <div data-element="header" class="column-chart__header">${this.formatHeading(this.value)}</div>`;
     }
 
     getTemplate() {
