@@ -83,8 +83,8 @@ export default class SortableTable {
   }
   destroy() {
     this.remove();
-    this.element = {};
-    this.subElements = {};
+    this.element = null;
+    this.subElements = null;
   }
   render() {
     const wrapper = document.createElement('div');
