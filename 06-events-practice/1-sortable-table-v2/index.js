@@ -85,7 +85,6 @@ export default class SortableTable {
         return result;
     }
     sortOnClient(field, order) {
-        console.log(field, order);
         const sortedData = this.sortData(field, order);
         const allColumns = this.element.querySelectorAll('.sortable-table__cell[data-id]');
         const currentColumn = this.element.querySelector(`.sortable-table__cell[data-id=${field}]`);
