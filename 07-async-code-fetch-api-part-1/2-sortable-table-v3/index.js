@@ -7,6 +7,40 @@ export default class SortableTable {
     step = 20;
     start = 1;
     end = this.start + this.step;
+
+    onWindowScroll = async () => {
+        const {bottom} = this.element.getBoundingClientRect();
+        const {id, order} = this.sorted;
+        if ((bottom - 100) < document.documentElement.clientHeight && !this.loading && !this.isSortLocally) {
+            this.start = this.end;
+            this.end = this.start + this.step;
+            this.loading = true;
+            const data = await this.loadData(id, order, this.start, this.end);
+            this.update(data);
+            this.loading = false;
+        }
+    }
+    onSortClick = (event) => {
+        const column = event.target.closest('[data-sortable="true"]');
+        const toggleOrder = order => {
+            const orders = {
+                asc: 'desc',
+                desc: 'asc'
+            };
+            return orders[order];
+        };
+        if (column) {
+            const {id, order} = column.dataset;
+            const newOrder = toggleOrder(order);
+            this.sorted = {
+                id, order: newOrder
+            };
+            column.dataset.order = newOrder;
+            column.append(this.subElements.arrow);
+            this.sort(id, newOrder);
+        }
+
+    }
   constructor(headersConfig, {
       url = '',
       data = [],
@@ -129,28 +163,16 @@ export default class SortableTable {
 
         return result;
     }
-    updateChanges(sortedData, field, order) {
-        const allColumns = this.element.querySelectorAll('.sortable-table__cell[data-id]');
-        const currentColumn = this.element.querySelector(`.sortable-table__cell[data-id=${field}]`);
-        // NOTE: Remove sorting arrow from other columns
-        allColumns.forEach(column => {
-            column.dataset.order = '';
-        });
-        console.log(currentColumn, order);
-        currentColumn.dataset.order = order;
 
-        this.subElements.body.innerHTML = this.getTableRows(sortedData);
-    }
     sortOnClient(field, order) {
         const sortedData = this.sortData(field, order);
-        this.updateChanges(sortedData, field, order);
+        this.subElements.body.innerHTML = this.getTableRows(sortedData);
     }
     async sortOnServer(field, order) {
         const start = 1;
         const end = start + this.step;
-
         const sortedData = await this.loadData(field, order, start, end);
-        this.updateChanges(sortedData, field, order);
+        this.subElements.body.innerHTML = this.getTableRows(sortedData);
     }
     async fetchData(url) {
       try {
@@ -158,6 +180,11 @@ export default class SortableTable {
       } catch (e) {
           console.error(e);
       }
+    }
+    async update(data) {
+        const rows = document.createElement('div');
+        rows.innerHTML = this.getTableRows(data);
+        this.subElements.body.append(...rows.childNodes);
     }
     async loadData(field, order, start, end) {
       this.setSearchParams(field, order, start, end);
@@ -175,24 +202,8 @@ export default class SortableTable {
         this.url.searchParams.set('_end', end);
     }
     initListeners() {
-        this.subElements.header.addEventListener('click', (event) => {
-            const column = event.target.closest('[data-sortable="true"]');
-            const toggleOrder = order => {
-                const orders = {
-                    asc: 'desc',
-                    desc: 'asc'
-                };
-                return orders[order];
-            };
-            if (column) {
-                const {id, order} = column.dataset;
-                const newOrder = toggleOrder(order);
-                column.dataset.order = newOrder;
-                column.append(this.subElements.arrow);
-                this.sort(id, newOrder);
-            }
-
-        });
+        window.addEventListener('scroll', this.onWindowScroll);
+        this.subElements.header.addEventListener('click', this.onSortClick);
     }
     remove() {
         if (this.element) {
@@ -203,9 +214,9 @@ export default class SortableTable {
         this.remove();
         this.element = null;
         this.subElements = null;
+        window.removeEventListener('scroll', this.onWindowScroll);
     }
     sort(field, order) {
-      console.log('sort', order)
         if (this.isSortLocally) {
             this.sortOnClient(field, order);
         } else {
